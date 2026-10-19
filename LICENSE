@@ -1,33 +1,3 @@
-Lumo (记账)
-Copyright (C) 2026 悲伤的乔治
-
-本程序是自由软件：你可以根据自由软件基金会发布的 GNU Affero 通用公共许可证
-（GNU Affero General Public License）第 3 版或（由你选择）任何更新版本的条款，
-重新发布和/或修改本程序。
-
-发布本程序是希望它有用，但不提供任何担保，甚至不提供适销性或特定用途
-适用性的默示担保。详见 GNU Affero 通用公共许可证。
-
-你应当已随本程序收到 GNU Affero 通用公共许可证的副本。
-如果没有，请见 <https://www.gnu.org/licenses/>。
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-================================================================================
-以下为许可证官方全文（请勿修改）：
-================================================================================
-
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
 
