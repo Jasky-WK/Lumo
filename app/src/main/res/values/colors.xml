@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_bg">#F4F6FB</color>
+    <color name="brand_blue">#4C7DF0</color>
+    <color name="brand_blue_light">#5B8DEF</color>
+    <color name="brand_blue_lighter">#7FA8F5</color>
+    <color name="brand_blue_dark">#3B66D8</color>
+    <color name="brand_blue_deep">#2E51BD</color>
+    <color name="brand_ink">#1B2430</color>
+
+    <!-- 桌面小组件（浅色）：RemoteViews 读不到 Compose 主题，只能靠资源限定符切深浅 -->
+    <color name="widget_bg">#FFFFFF</color>
+    <color name="widget_stroke">#EDF1F8</color>
+    <color name="widget_sub">#8A93A5</color>
+    <color name="widget_sub2">#5C6577</color>
+    <color name="widget_amount">#E87461</color>
+    <color name="widget_positive">#2E9E6B</color>
+    <color name="widget_bar">#4C7DF0</color>
+    <color name="widget_btn_bg">#4C7DF0</color>
+    <color name="widget_btn_fg">#FFFFFF</color>
+</resources>

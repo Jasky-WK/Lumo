@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 新增桌面小组件（N34）的描述文案。单独一个文件，避免与其它改动同时写 strings.xml -->
+<resources>
+    <string name="widget_budget_desc">本月剩余预算、已用与进度，点一下打开 Lumo</string>
+    <string name="widget_template_desc">最常用的四个记账模板，点一下按该分类记一笔</string>
+</resources>

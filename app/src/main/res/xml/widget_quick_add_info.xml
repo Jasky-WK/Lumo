@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 3×1：与「今日收支」一致，minWidth/minHeight 对应 3 列 / 1 行
+     resizeMode 只给 horizontal：宽度可调、高度锁死，保证不会出现 2 行的规格 -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_quick_add_desc"
+    android:initialLayout="@layout/widget_quick_add"
+    android:minHeight="40dp"
+    android:minWidth="180dp"
+    android:previewLayout="@layout/widget_quick_add"
+    android:resizeMode="horizontal"
+    android:targetCellHeight="1"
+    android:targetCellWidth="3"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <external-files-path
+        name="backups"
+        path="backups/" />
+    <files-path
+        name="internal_backups"
+        path="backups/" />
+    <cache-path
+        name="share"
+        path="share/" />
+</paths>

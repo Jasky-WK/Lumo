@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 4×1（N34）：与「剩余预算」同一套规格，4 列 / 1 行，宽度可调、高度锁死 -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_template_desc"
+    android:initialLayout="@layout/widget_template"
+    android:minHeight="40dp"
+    android:minWidth="250dp"
+    android:previewLayout="@layout/widget_template"
+    android:resizeMode="horizontal"
+    android:targetCellHeight="1"
+    android:targetCellWidth="4"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />

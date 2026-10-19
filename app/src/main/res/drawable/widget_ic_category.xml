@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 兜底图标：认不出图标 key 时用（与 CatStyle 里的 Icons.Rounded.Category 对应） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@color/widget_sub2"
+        android:pathData="M12,2l-5.5,9h11L12,2zM17.5,17c2.49,0 4.5,-2.01 4.5,-4.5S19.99,8 17.5,8S13,10.01 13,12.5S15.01,17 17.5,17zM3,13.5h8v8L3,21.5V13.5z" />
+</vector>

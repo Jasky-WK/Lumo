@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- 夜间下窗口层跟随深色：windowBackground 走 values-night/colors.xml 的深色 brand_bg，
+         状态栏图标改成浅色（深底配白图标），避免深色主题下出现「浅底深图标」的不匹配。
+         注意：values-night 里的同名 style 会整体替换 values 版本，所以每个 item 必须写全。 -->
+    <style name="Theme.Bookkeeping" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/brand_bg</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+    </style>
+</resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lumo</string>
+    <string name="app_slogan">纯本地记账 · 数据只存在这台手机</string>
+    <string name="app_privacy">无网络权限 · 不上传任何数据</string>
+    <string name="widget_today_desc">今日支出金额、收入与笔数，点一下打开 Lumo</string>
+    <string name="widget_quick_add_desc">看今日支出，右侧按钮直接打开记一笔</string>
+    <!-- N42：桌面快捷方式 -->
+    <string name="shortcut_quick_add_short">记一笔</string>
+    <string name="shortcut_quick_add_long">记一笔</string>
+    <string name="shortcut_month_txns_short">本月明细</string>
+    <string name="shortcut_month_txns_long">本月明细</string>
+</resources>

@@ -1,0 +1,17 @@
+# 统一换行：源码与文档一律 LF，避免 Windows 提交 CRLF 后
+# 在 Linux / macOS 上出现「`\r': command not found」之类的构建失败
+* text=auto eol=lf
+
+# Gradle wrapper 必须保持 LF + 可执行权限，否则 macOS / Linux 下 ./gradlew 无法运行
+gradlew text eol=lf
+gradlew.bat text eol=crlf
+
+# 二进制资源不做换行转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.wav binary
+*.jar binary
+*.zip binary
+*.jks binary

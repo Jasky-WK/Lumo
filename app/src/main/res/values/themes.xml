@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- 深浅色由 Compose 的 AppColors 自己处理（跟随系统 / 浅色 / 深色），
+         所以这里显式关掉平台的 Force Dark：Theme.Material.Light 默认带 forceDarkAllowed=true，
+         系统切暗色时平台会在我们自绘的深色画面上再叠一层反色，结果 App 看起来还是浅色（部分机型表现为颜色错乱）。 -->
+    <style name="Theme.Bookkeeping" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/brand_bg</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+    </style>
+
+    <!-- 启动屏：品牌色背景 + 居中白色 ¥，Android 12+ 由系统 SplashScreen 接管 -->
+    <style name="Theme.Bookkeeping.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/brand_blue_dark</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Bookkeeping</item>
+    </style>
+
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 夜间资源：窗口层（windowBackground）也要跟着系统变深，
+     否则重建 Activity 或退出时会出现一帧浅色底 —— 就是「半深半浅」的来源。
+     取值与 ui/theme/Theme.kt 里深色主题的 bg 保持一致（AppColors.bg = 0xFF0F1319）。 -->
+<resources>
+    <color name="brand_bg">#0F1319</color>
+
+    <!-- 桌面小组件（深色）：与 Theme.kt 深色的 card / sub / sub2 / primary 对齐 -->
+    <color name="widget_bg">#1A2028</color>
+    <color name="widget_stroke">#262E39</color>
+    <color name="widget_sub">#8B94A6</color>
+    <color name="widget_sub2">#AEB7C6</color>
+    <color name="widget_amount">#E87461</color>
+    <color name="widget_positive">#5FC694</color>
+    <color name="widget_bar">#5B8DEF</color>
+    <color name="widget_btn_bg">#5B8DEF</color>
+    <color name="widget_btn_fg">#0F1319</color>
+</resources>

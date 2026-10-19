@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 4×1（N34）：minWidth/minHeight 按平台换算公式取 4 列 / 1 行（4 列=250dp，1 行=40dp）
+     resizeMode 只给 horizontal：允许左右微调宽度，但锁死高度，用户拖不出 2 行 -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_budget_desc"
+    android:initialLayout="@layout/widget_budget"
+    android:minHeight="40dp"
+    android:minWidth="250dp"
+    android:previewLayout="@layout/widget_budget"
+    android:resizeMode="horizontal"
+    android:targetCellHeight="1"
+    android:targetCellWidth="4"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />

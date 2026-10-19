@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  N42：桌面快捷方式（长按 App 图标）。
+  - 「记一笔」：加号图标，点击带 extra_open_add_entry 直接打开记一笔面板
+  - 「本月明细」：报表图标，点击带 extra_open=month_txns 直达本月账单明细页
+  extra 在快捷方式里只能写成字符串，MainActivity.extractAction 同时兼容布尔与字符串两种取值。
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <shortcut
+        android:shortcutId="quick_add"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_ic_add"
+        android:shortcutShortLabel="@string/shortcut_quick_add_short"
+        android:shortcutLongLabel="@string/shortcut_quick_add_long">
+        <intent
+            android:action="com.qingjizhang.app.action.QUICK_ADD"
+            android:targetPackage="com.qingjizhang.app"
+            android:targetClass="com.qingjizhang.app.MainActivity">
+            <extra
+                android:name="extra_open_add_entry"
+                android:value="true" />
+        </intent>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="month_txns"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_ic_report"
+        android:shortcutShortLabel="@string/shortcut_month_txns_short"
+        android:shortcutLongLabel="@string/shortcut_month_txns_long">
+        <intent
+            android:action="com.qingjizhang.app.action.MONTH_TXNS"
+            android:targetPackage="com.qingjizhang.app"
+            android:targetClass="com.qingjizhang.app.MainActivity">
+            <extra
+                android:name="extra_open"
+                android:value="month_txns" />
+        </intent>
+    </shortcut>
+</shortcuts>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 剩余预算 4×1（N34）：左边「本月剩余预算 + 金额」，右边「已用 / 预算 + 进度条」。
+     左右各占一半（weight 1/1），所有文字单行 + ellipsize，保证金额优先完整显示、不被裁切；
+     未设置预算时金额位显示「未设置预算」、进度条隐藏 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/w_b_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="12dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="8dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/w_b_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="本月剩余预算"
+            android:textColor="@color/widget_sub"
+            android:textSize="10.5sp" />
+
+        <TextView
+            android:id="@+id/w_b_amount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="¥0.00"
+            android:textColor="@color/widget_amount"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/w_b_used"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:gravity="end"
+            android:maxLines="1"
+            android:text="已用 0.00 / 0.00"
+            android:textColor="@color/widget_sub2"
+            android:textSize="9.5sp" />
+
+        <ProgressBar
+            android:id="@+id/w_b_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:layout_marginTop="5dp"
+            android:max="1000"
+            android:progress="0"
+            android:progressBackgroundTint="@color/widget_stroke"
+            android:progressTint="@color/widget_bar" />
+    </LinearLayout>
+</LinearLayout>
