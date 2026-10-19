@@ -4,7 +4,7 @@
 > 所有数据只存在你自己的手机上，没有账号、没有云同步、没有广告、没有网络权限。
 
 - 包名：`com.qingjizhang.app`
-- 当前版本：**v2.9.0**（versionCode 50，数据库 v17）
+- 当前版本：**v2.9.1**（versionCode 51，数据库 v17）
 - 最低支持：Android 8.0（API 26）及以上
 - License：**AGPL-3.0**（GNU Affero General Public License v3.0）
 
@@ -102,7 +102,7 @@ Lumo 是一个把「记一笔」做到最快的本地记账工具：打开即记
 | 构建 | Android Gradle Plugin 8.5.2，Gradle 8.7（仓库带 wrapper），JDK 17 |
 | 压缩 | Release 开启 R8（`isMinifyEnabled` + `isShrinkResources`），APK 约 2.3 MB |
 | 性能 | 附带 `benchmark` 模块（Macrobenchmark 启动 / 滚动基准 + Baseline Profile 生成，见 `benchmark/README.md`） |
-| 测试 | JUnit 4 + Robolectric，**168 个单元测试**（含迁移测试、跨页数字对拍、性能守卫） |
+| 测试 | JUnit 4 + Robolectric，**207 个单元测试**（含迁移测试、跨页数字对拍、性能守卫） |
 | 依赖 | 无网络库、无图片加载库、无第三方 UI 库（haze 除外） |
 
 ---
@@ -133,7 +133,7 @@ sdk.dir=D\:\\Android\\Sdk
 # Windows
 gradlew.bat :app:assembleDebug        # Debug 包
 gradlew.bat :app:assembleRelease      # Release 包（R8 压缩）
-gradlew.bat :app:testDebugUnitTest    # 跑单元测试（168 个）
+gradlew.bat :app:testDebugUnitTest    # 跑单元测试（207 个）
 
 # macOS / Linux
 ./gradlew :app:assembleRelease
@@ -184,4 +184,4 @@ Copyright (C) 2026 悲伤的乔治 — 完整版权与许可说明见 [COPYRIGHT
 
 ## 七、更新记录
 
-完整的版本更新记录见 [CHANGELOG.md](CHANGELOG.md)（与 App 内「设置 → 帮助与反馈 → 更新日志」同一份数据源，覆盖 v1.4.0 → v2.9.0 全部 47 个版本），App 内也能看到同一份内容。
+完整的版本更新记录见 [CHANGELOG.md](CHANGELOG.md)（与 App 内「设置 → 帮助与反馈 → 更新日志」同一份数据源，覆盖 v1.4.0 → v2.9.1 全部 48 个版本），App 内也能看到同一份内容。

@@ -64,6 +64,11 @@ fun BackupScreen(
     val lastBackup by vm.lastBackupText.collectAsState()
     val busy by vm.busy.collectAsState()
     val autoOn by vm.autoBackupOn.collectAsState()
+    // v2.9.1：恢复影响对比需要「当前设备有多少数据」，按当前账本实时读取
+    val currentTxns by vm.txns.collectAsState()
+    val currentLedgers by vm.ledgers.collectAsState()
+    val currentTxnCount = currentTxns.size
+    val currentLedgerCount = currentLedgers.size
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -169,6 +174,12 @@ fun BackupScreen(
     preview?.let { p ->
         FullBackupPreviewDialog(
             preview = p,
+            impact = BackupManager.impactOf(
+                backupTxns = p.txns,
+                backupLedgers = p.ledgers,
+                currentTxns = currentTxnCount,
+                currentLedgers = currentLedgerCount
+            ),
             onConfirm = { importNow() },
             onDismiss = { preview = null; pendingFile = null }
         )
@@ -255,6 +266,24 @@ fun BackupScreen(
                 text = "完整备份会把全部账本、账户（含类型 / 是否计入净资产 / 隐藏 / 排序）、账单（含借贷与还款关联、报销退款、回收站）和所有设置打包成一个文件，换新手机或重装后导入即可完美复原。全程不上传云端、不需要账号。",
                 icon = Icons.Rounded.Security
             )
+
+            // v2.9.1 备份安全网：距上次备份太久（或从未备份）时显式警示。
+            // 原来的自动备份靠「打开 App 才检查」，长期不开的用户永远没有备份，
+            // 这里把「多久没备份」直接摆在最显眼的位置。
+            val freshHint = remember(fulls, autos) {
+                val newest = (fulls.map { it.file.lastModified() } +
+                    autos.map { it.timeMillis }).maxOrNull() ?: 0L
+                BackupManager.stalenessHint(newest)
+            }
+            if (freshHint != null) {
+                Spacer(Modifier.height(10.dp))
+                TipBanner(
+                    text = freshHint,
+                    icon = Icons.Rounded.WarningAmber,
+                    bg = WarnBg,
+                    fg = WarnFg
+                )
+            }
             Spacer(Modifier.height(14.dp))
 
             SectionTitle("完整备份", trailing = if (fulls.isEmpty()) null else "${fulls.size} 份")
@@ -612,13 +641,16 @@ fun BackupScreen(
     }
 }
 
-/** 导入前预览：签名信息 + 内容统计 + 设置概要，确认后才覆盖 */
+/** 导入前预览：签名信息 + 内容统计 + 设置概要 + 与当前数据量的对比，确认后才覆盖 */
 @Composable
 private fun FullBackupPreviewDialog(
     preview: BackupManager.FullBackupPreview,
+    /** v2.9.1：这份备份恢复后会比现在多 / 少多少数据 */
+    impact: BackupManager.RestoreImpact,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val risk = BackupManager.riskLevel(impact)
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("导入这份完整备份？", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
@@ -628,6 +660,9 @@ private fun FullBackupPreviewDialog(
                     .heightIn(max = 400.dp)
                     .verticalScroll(rememberScrollState())
             ) {
+                // v2.9.1：最关键的对比放最上面——用户最怕的是「恢复完才发现少了几个月账」
+                RestoreImpactBlock(impact = impact, risk = risk)
+                Spacer(Modifier.height(10.dp))
                 PreviewLine("备份文件", preview.fileName)
                 PreviewLine("生成时间", preview.createdAtText)
                 PreviewLine("来源版本", "App ${preview.appVersion} · 库结构 v${preview.schemaVersion} · 格式 v${preview.formatVersion}")
@@ -655,13 +690,68 @@ private fun FullBackupPreviewDialog(
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("覆盖导入", color = Expense, fontWeight = FontWeight.Bold)
+                Text(
+                    if (risk >= 2) "仍要覆盖导入" else "覆盖导入",
+                    color = Expense,
+                    fontWeight = FontWeight.Bold
+                )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("取消", color = Sub) }
         }
     )
+}
+
+/**
+ * v2.9.1：恢复影响对比块。
+ * 三级配色——无回退（绿）/ 轻微回退（黄）/ 严重回退（红），并要求用户在红色时明确点「仍要覆盖导入」。
+ */
+@Composable
+private fun RestoreImpactBlock(
+    impact: BackupManager.RestoreImpact,
+    risk: Int
+) {
+    val (bg, fg) = when (risk) {
+        0 -> Pair(PrimaryBg, PrimaryDeep)
+        1 -> Pair(WarnBg, WarnFg)
+        else -> Pair(Expense.copy(alpha = 0.10f), Expense)
+    }
+    val headline = when {
+        risk >= 2 -> "会丢失 ${impact.lostTxns} 笔账单"
+        risk == 1 -> "会丢失 ${impact.lostTxns} 笔账单"
+        impact.gainedTxns > 0 -> "会恢复 ${impact.gainedTxns} 笔账单"
+        else -> "数据量与本机一致"
+    }
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = bg
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            Text(headline, fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = fg)
+            Spacer(Modifier.height(5.dp))
+            Text(
+                "备份 ${impact.backupTxns} 笔 · 本机当前 ${impact.currentTxns} 笔",
+                fontSize = 12.sp, color = fg
+            )
+            if (impact.backupLedgers != impact.currentLedgers) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "账本：备份 ${impact.backupLedgers} 个 · 本机 ${impact.currentLedgers} 个",
+                    fontSize = 12.sp, color = fg
+                )
+            }
+            if (risk >= 1) {
+                Spacer(Modifier.height(5.dp))
+                Text(
+                    if (risk >= 2) "恢复后这些账单将无法找回，请确认这是你要的备份"
+                    else "恢复后比现在少一部分账单，确认没有记错备份",
+                    fontSize = 11.5.sp, color = fg, lineHeight = 17.sp
+                )
+            }
+        }
+    }
 }
 
 /** 导入结果：成功给明细 + 重启入口，失败说明原因并强调已回滚 */

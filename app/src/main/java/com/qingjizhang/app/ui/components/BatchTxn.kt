@@ -20,6 +20,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -115,11 +119,17 @@ fun TxnSelectableRow(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
                 .background(if (checked) PrimaryBg else CardWhite)
+                // v2.9.1 无障碍：整行是一个可勾选的开关，TalkBack 需要知道当前是否已选中
+                .semantics {
+                    role = Role.Checkbox
+                    stateDescription = if (checked) "已选中" else "未选中"
+                }
                 .clickable { state.toggle(id) },
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 if (checked) Icons.Rounded.CheckCircle else Icons.Rounded.RadioButtonUnchecked,
+                // 选中态通过 stateDescription 播报，图标本身不再重复朗读
                 contentDescription = null,
                 tint = if (checked) Primary else Chevron,
                 modifier = Modifier

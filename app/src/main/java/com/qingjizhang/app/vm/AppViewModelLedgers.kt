@@ -8,6 +8,7 @@ import com.qingjizhang.app.ui.theme.ThemeMode
 import com.qingjizhang.app.util.DateFmt
 import com.qingjizhang.app.util.Money
 import com.qingjizhang.app.util.ReceiptStore
+import com.qingjizhang.app.util.UserError
 import com.qingjizhang.app.vm.AppViewModel
 import com.qingjizhang.app.widget.WidgetRefresh
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +45,7 @@ fun AppViewModel.addLedger(name: String) {
                 Seed.initLedgerPresets(requireDb(), id)
                 _snack.emit("已创建账本：$name，并写入预设分类")
                 switchLedger(id)
-            }.onFailure { _snack.emit("创建失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("创建失败", it)) }
         }
     }
 
@@ -60,7 +61,7 @@ fun AppViewModel.addLedger(name: String) {
                 val id = DemoData.create(requireDb())
                 switchLedger(id)
                 _snack.emit("示例账本已生成，可随时在「账本管理」里删除")
-            }.onFailure { _snack.emit("生成示例账本失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("生成示例账本失败", it)) }
             _busy.value = false
         }
     }
@@ -69,7 +70,7 @@ fun AppViewModel.renameLedger(ledger: Ledger, name: String) {        scope.launc
             runCatching {
                 repo().renameLedger(ledger, name)
                 _snack.emit("已重命名为：$name")
-            }.onFailure { _snack.emit("重命名失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("重命名失败", it)) }
         }
     }
 
@@ -85,7 +86,7 @@ fun AppViewModel.deleteLedger(ledger: Ledger) {
                 val next = ledgers.value.firstOrNull { it.id != ledger.id }
                 if (next != null) switchLedger(next.id)
                 _snack.emit("已删除账本，30 天内可在回收站还原")
-            }.onFailure { _snack.emit("删除失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 
@@ -95,7 +96,7 @@ fun AppViewModel.restoreLedger(ledger: Ledger) {
             runCatching {
                 repo().restoreLedger(ledger)
                 _snack.emit("已还原账本「${ledger.name}」")
-            }.onFailure { _snack.emit("还原失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("还原失败", it)) }
         }
     }
 
@@ -106,7 +107,7 @@ fun AppViewModel.purgeLedger(ledger: Ledger) {
                 repo().purgeLedger(ledger)
                 sweepReceiptDirs()
                 _snack.emit("已彻底删除账本")
-            }.onFailure { _snack.emit("删除失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 
@@ -115,7 +116,7 @@ fun AppViewModel.clearAllTxns() {
             runCatching {
                 repo().clearTransactions(_currentLedgerId.value)
                 _snack.emit("已清空当前账本的全部账单")
-            }.onFailure { _snack.emit("清空失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("清空失败", it)) }
         }
     }
 
@@ -129,7 +130,7 @@ fun AppViewModel.trashAllTxns() {
                 val n = txns.value.size
                 repo().trashAllTxns(_currentLedgerId.value)
                 _snack.emit("已把 $n 笔账单移入回收站，保留 30 天，期间可还原")
-            }.onFailure { _snack.emit("删除失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 
@@ -145,7 +146,7 @@ fun AppViewModel.saveRule(rule: RecurringRule, isNew: Boolean, runCatchUp: Boole
                 } else {
                     _snack.emit("规则已保存")
                 }
-            }.onFailure { _snack.emit("保存失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("保存失败", it)) }
         }
     }
 
@@ -157,7 +158,7 @@ fun AppViewModel.toggleRule(rule: RecurringRule, enabled: Boolean) {
                     val n = RecurringEngine.catchUp(requireDb())
                     if (n > 0) _snack.emit("已补记 $n 笔")
                 }
-            }.onFailure { _snack.emit("操作失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("操作失败", it)) }
         }
     }
 
@@ -166,7 +167,7 @@ fun AppViewModel.deleteRule(rule: RecurringRule) {
             runCatching {
                 repo().deleteRule(rule)
                 _snack.emit("已删除规则")
-            }.onFailure { _snack.emit("删除失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 
@@ -179,7 +180,7 @@ fun AppViewModel.catchUpNow() {
             runCatching {
                 val n = RecurringEngine.catchUp(requireDb())
                 _snack.emit(if (n > 0) "已补记 $n 笔周期账单" else "没有需要补记的账单")
-            }.onFailure { _snack.emit("补记失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("补记失败", it)) }
         }
     }
 
@@ -188,7 +189,7 @@ fun AppViewModel.restoreTxn(txn: Txn) {
             runCatching {
                 repo().restoreTxn(txn)
                 _snack.emit("已还原这笔账单")
-            }.onFailure { _snack.emit("还原失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("还原失败", it)) }
         }
     }
 
@@ -198,7 +199,7 @@ fun AppViewModel.purgeTxn(txn: Txn) {
                 repo().purgeTxn(txn)
                 sweepReceiptDirs()
                 _snack.emit("已彻底删除")
-            }.onFailure { _snack.emit("删除失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 
@@ -207,7 +208,7 @@ fun AppViewModel.restoreAccount(account: Account) {
             runCatching {
                 repo().restoreAccount(account)
                 _snack.emit("已还原账户与它的账单")
-            }.onFailure { _snack.emit("还原失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("还原失败", it)) }
         }
     }
 
@@ -216,7 +217,7 @@ fun AppViewModel.purgeAccount(account: Account) {
             runCatching {
                 repo().purgeAccount(account)
                 _snack.emit("已彻底删除账户")
-            }.onFailure { _snack.emit("删除失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 
@@ -226,7 +227,7 @@ fun AppViewModel.clearTrash() {
                 repo().purgeAllTrash(_currentLedgerId.value)
                 sweepReceiptDirs()
                 _snack.emit("回收站已清空")
-            }.onFailure { _snack.emit("清空失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("清空失败", it)) }
         }
     }
 

@@ -16,6 +16,7 @@ import com.qingjizhang.app.util.ReportCat
 import com.qingjizhang.app.util.ReportMonth
 import com.qingjizhang.app.util.ReportStats
 import com.qingjizhang.app.util.ReceiptStore
+import com.qingjizhang.app.util.UserError
 import com.qingjizhang.app.widget.WidgetRefresh
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -1142,7 +1143,7 @@ class AppViewModel(internal val app: Application) : AndroidViewModel(app) {
             runCatching {
                 repo().mergeCategory(from, to)
                 _snack.emit("已把「${from.name}」并入「${to.name}」")
-            }.onFailure { _snack.emit("合并失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("合并失败", it)) }
         }
     }
 
@@ -1157,7 +1158,7 @@ class AppViewModel(internal val app: Application) : AndroidViewModel(app) {
             runCatching {
                 repo().setBudget(_currentLedgerId.value, cents)
                 _snack.emit("预算已更新")
-            }.onFailure { _snack.emit("保存失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("保存失败", it)) }
         }
     }
 

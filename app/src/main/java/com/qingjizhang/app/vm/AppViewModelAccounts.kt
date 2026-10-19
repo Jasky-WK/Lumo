@@ -8,6 +8,7 @@ import com.qingjizhang.app.ui.theme.ThemeMode
 import com.qingjizhang.app.util.DateFmt
 import com.qingjizhang.app.util.Money
 import com.qingjizhang.app.util.ReceiptStore
+import com.qingjizhang.app.util.UserError
 import com.qingjizhang.app.vm.AppViewModel
 import com.qingjizhang.app.widget.WidgetRefresh
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +29,7 @@ fun AppViewModel.saveAccount(account: Account, isNew: Boolean) {
             runCatching {
                 if (isNew) repo().addAccount(account) else repo().updateAccount(account)
                 _snack.emit(if (isNew) "已添加账户" else "已保存账户")
-            }.onFailure { _snack.emit("保存失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("保存失败", it)) }
         }
     }
 
@@ -50,7 +51,7 @@ fun AppViewModel.moveAccount(account: Account, up: Boolean) {
                     if (a.sortOrder == i) null else a.copy(sortOrder = i)
                 }
                 if (changed.isNotEmpty()) repo().updateAccounts(changed)
-            }.onFailure { _snack.emit("排序失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("排序失败", it)) }
         }
     }
 
@@ -65,7 +66,7 @@ fun AppViewModel.reorderAccounts(ordered: List<Account>) {
                     if (a.sortOrder == i) null else a.copy(sortOrder = i)
                 }
                 if (changed.isNotEmpty()) repo().updateAccounts(changed)
-            }.onFailure { _snack.emit("排序失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("排序失败", it)) }
         }
     }
 
@@ -89,7 +90,7 @@ fun AppViewModel.deleteAccount(account: Account, keepTxns: Boolean = false) {
                     repo().deleteAccount(account)
                     _snack.emit("账户与它的账单已移入回收站")
                 }
-            }.onFailure { _snack.emit("删除失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 
@@ -159,7 +160,7 @@ fun AppViewModel.adjustAccountBalance(
                     "已按差额记一笔" + (if (isIncome) "收入 " else "支出 ") +
                         Money.withSymbol(Math.abs(diff))
                 )
-            }.onFailure { _snack.emit("调整失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("调整失败", it)) }
         }
     }
 
@@ -195,7 +196,7 @@ fun AppViewModel.addAccountType(name: String) {
         scope.launch {
             runCatching { repo().addAccountType(_currentLedgerId.value, n) }
                 .onSuccess { _snack.emit("已新建类型「$n」") }
-                .onFailure { _snack.emit("新建失败：${it.message}") }
+                .onFailure { _snack.emit(UserError.text("新建失败", it)) }
         }
     }
 
@@ -214,7 +215,7 @@ fun AppViewModel.renameAccountType(type: AccountTypeEntity, newName: String) {
         scope.launch {
             runCatching { repo().renameAccountType(type, n) }
                 .onSuccess { _snack.emit("已重命名为「$n」") }
-                .onFailure { _snack.emit("重命名失败：${it.message}") }
+                .onFailure { _snack.emit(UserError.text("重命名失败", it)) }
         }
     }
 
@@ -230,7 +231,7 @@ fun AppViewModel.deleteAccountType(type: AccountTypeEntity, migrateToName: Strin
         scope.launch {
             runCatching { repo().deleteAccountType(type, migrateToName) }
                 .onSuccess { _snack.emit("已删除类型「${type.name}」") }
-                .onFailure { _snack.emit("删除失败：${it.message}") }
+                .onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 
@@ -253,7 +254,7 @@ fun AppViewModel.addTransferKind(name: String) {
         scope.launch {
             runCatching { repo().addTransferKind(_currentLedgerId.value, n) }
                 .onSuccess { _snack.emit("已新建「$n」") }
-                .onFailure { _snack.emit("新建失败：${it.message}") }
+                .onFailure { _snack.emit(UserError.text("新建失败", it)) }
         }
     }
 
@@ -272,7 +273,7 @@ fun AppViewModel.renameTransferKind(kind: TransferKindEntity, newName: String) {
         scope.launch {
             runCatching { repo().renameTransferKind(kind, n) }
                 .onSuccess { _snack.emit("已重命名为「$n」") }
-                .onFailure { _snack.emit("重命名失败：${it.message}") }
+                .onFailure { _snack.emit(UserError.text("重命名失败", it)) }
         }
     }
 
@@ -288,7 +289,7 @@ fun AppViewModel.deleteTransferKind(kind: TransferKindEntity, migrateToName: Str
         scope.launch {
             runCatching { repo().deleteTransferKind(kind, migrateToName) }
                 .onSuccess { _snack.emit("已删除「${kind.name}」") }
-                .onFailure { _snack.emit("删除失败：${it.message}") }
+                .onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 
@@ -310,7 +311,7 @@ internal suspend fun AppViewModel.saveTag(name: String): Long {
         tags.value.firstOrNull { it.name == n }?.let { return it.id }
         return runCatching { repo().addTag(_currentLedgerId.value, n) }
             .onSuccess { _snack.emit("已新建标签「$n」") }
-            .onFailure { _snack.emit("新建失败：${it.message}") }
+            .onFailure { _snack.emit(UserError.text("新建失败", it)) }
             .getOrDefault(0L)
     }
 
@@ -329,7 +330,7 @@ fun AppViewModel.renameTag(tag: TagEntity, newName: String) {
         scope.launch {
             runCatching { repo().renameTag(tag, n) }
                 .onSuccess { _snack.emit("已重命名为「$n」") }
-                .onFailure { _snack.emit("重命名失败：${it.message}") }
+                .onFailure { _snack.emit(UserError.text("重命名失败", it)) }
         }
     }
 
@@ -341,7 +342,7 @@ fun AppViewModel.deleteTag(tag: TagEntity) {
         scope.launch {
             runCatching { repo().deleteTag(tag) }
                 .onSuccess { _snack.emit("已删除标签「${tag.name}」") }
-                .onFailure { _snack.emit("删除失败：${it.message}") }
+                .onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 
@@ -363,14 +364,14 @@ internal suspend fun AppViewModel.saveArAp(item: ArAp): Boolean =
             .onSuccess {
                 _snack.emit(if (item.direction == ArApDirection.RECEIVABLE) "已记应收款" else "已记应付款")
             }
-            .onFailure { _snack.emit("保存失败：${it.message}") }
+            .onFailure { _snack.emit(UserError.text("保存失败", it)) }
             .isSuccess
 
 fun AppViewModel.deleteArAp(item: ArAp) {
         scope.launch {
             runCatching { repo().deleteArAp(item) }
                 .onSuccess { _snack.emit("已删除") }
-                .onFailure { _snack.emit("删除失败：${it.message}") }
+                .onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 
@@ -378,7 +379,7 @@ fun AppViewModel.deleteArAp(item: ArAp) {
 internal suspend fun AppViewModel.updateArAp(item: ArAp): Boolean =
         runCatching { repo().updateArAp(item) }
             .onSuccess { _snack.emit("已保存修改") }
-            .onFailure { _snack.emit("保存失败：${it.message}") }
+            .onFailure { _snack.emit(UserError.text("保存失败", it)) }
             .isSuccess
 
     /**
@@ -393,7 +394,7 @@ fun AppViewModel.writeOffArAps(items: List<ArAp>) {
                     val abandoned = items.sumOf { (it.amountCents - it.settledCents).coerceAtLeast(0L) }
                     _snack.emit("已销账，放弃剩余 " + Money.withSymbol(abandoned))
                 }
-                .onFailure { _snack.emit("销账失败：${it.message}") }
+                .onFailure { _snack.emit(UserError.text("销账失败", it)) }
         }
     }
 
@@ -430,6 +431,6 @@ internal suspend fun AppViewModel.settleArAps(
                         "，剩余部分仍" + (if (receivable) "待收" else "待付")
                     } else ""
             )
-        }.onFailure { _snack.emit("操作失败：${it.message}") }
+        }.onFailure { _snack.emit(UserError.text("操作失败", it)) }
             .isSuccess
     }

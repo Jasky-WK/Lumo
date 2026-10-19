@@ -8,6 +8,7 @@ import com.qingjizhang.app.ui.theme.ThemeMode
 import com.qingjizhang.app.util.DateFmt
 import com.qingjizhang.app.util.Money
 import com.qingjizhang.app.util.ReceiptStore
+import com.qingjizhang.app.util.UserError
 import com.qingjizhang.app.vm.AppViewModel
 import com.qingjizhang.app.widget.WidgetRefresh
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +35,7 @@ fun AppViewModel.openReceipts(txnId: Long) {
 fun AppViewModel.addReceiptPhoto(txnId: Long, filePath: String) {
         scope.launch {
             runCatching { repo().addReceiptPhoto(txnId, filePath) }
-                .onFailure { _snack.emit("保存小票失败：${it.message}") }
+                .onFailure { _snack.emit(UserError.text("保存小票失败", it)) }
         }
     }
 
@@ -44,6 +45,6 @@ fun AppViewModel.deleteReceiptPhoto(photo: ReceiptPhoto) {
             runCatching {
                 ReceiptStore.deleteFile(photo.filePath)
                 repo().deleteReceiptPhoto(photo)
-            }.onFailure { _snack.emit("删除小票失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("删除小票失败", it)) }
         }
     }

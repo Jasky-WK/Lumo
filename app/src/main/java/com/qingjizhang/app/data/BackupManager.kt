@@ -260,9 +260,96 @@ object BackupManager {
         val warnings: List<String> = emptyList()
     )
 
+    /**
+     * 恢复影响评估（v2.9.1 打磨项 ②）：覆盖导入前告诉用户「会丢多少 / 会多出多少」。
+     *
+     * 记账 App 最怕的不是导入失败，而是**导入成功后才发现少了几个月的数据**。
+     * 预览弹窗只列备份里有什么，用户无法判断「这比我现在多还是少」，
+     * 所以这里用当前设备的实况与备份对比，把差额直接摆出来。
+     *
+     * @param backupTxns      备份里的账单笔数（[FullBackupPreview.txns]）
+     * @param backupLedgers   备份里的账本数
+     * @param currentTxns     当前设备当前账本的账单笔数
+     * @param currentLedgers  当前设备的账本数
+     */
+    data class RestoreImpact(
+        val backupTxns: Int,
+        val currentTxns: Int,
+        val backupLedgers: Int,
+        val currentLedgers: Int,
+        /** 恢复后会比现在少的账单（正数=会丢这么多笔） */
+        val lostTxns: Int,
+        /** 恢复后会比现在多的账单 */
+        val gainedTxns: Int
+    ) {
+        /** 是否属于「回退」：备份比当前数据旧/少，恢复等于丢数据，需要醒目警示 */
+        val isRegression: Boolean get() = lostTxns > 0
+    }
+
+    /**
+     * 计算恢复影响。纯函数，便于单测。
+     */
+    fun impactOf(
+        backupTxns: Int,
+        backupLedgers: Int,
+        currentTxns: Int,
+        currentLedgers: Int
+    ): RestoreImpact {
+        // 先归一化再比较：负数（异常数据）按 0 处理，避免算出荒谬的「丢失 -8 笔」
+        val bTxns = backupTxns.coerceAtLeast(0)
+        val cTxns = currentTxns.coerceAtLeast(0)
+        val lost = (cTxns - bTxns).coerceAtLeast(0)
+        val gained = (bTxns - cTxns).coerceAtLeast(0)
+        return RestoreImpact(
+            backupTxns = bTxns,
+            currentTxns = cTxns,
+            backupLedgers = backupLedgers.coerceAtLeast(0),
+            currentLedgers = currentLedgers.coerceAtLeast(0),
+            lostTxns = lost,
+            gainedTxns = gained
+        )
+    }
+
+    /**
+     * 恢复风险等级（v2.9.1）：0 = 无风险（数据持平或更多），1 = 轻微回退，2 = 严重回退。
+     *
+     * 「严重」的判定：备份缺少的账单 ≥ 当前账单的 10%，或直接少了 50 笔以上。
+     * 这类恢复很容易用错旧备份，弹窗必须用红色警示并要求二次确认。
+     */
+    fun riskLevel(impact: RestoreImpact): Int {
+        if (!impact.isRegression) return 0
+        val ratio = if (impact.currentTxns > 0) {
+            impact.lostTxns.toDouble() / impact.currentTxns
+        } else 1.0
+        return if (ratio >= 0.10 || impact.lostTxns >= 50) 2 else 1
+    }
+
+    /** 备份「上次备份距今天数」（v2.9.1）；从未备份返回 null */
+    fun daysSince(lastBackupAtMillis: Long, now: Long = System.currentTimeMillis()): Long? {
+        if (lastBackupAtMillis <= 0L) return null
+        val diff = now - lastBackupAtMillis
+        if (diff < 0L) return 0L
+        return diff / (24L * 60 * 60 * 1000)
+    }
+
+    /**
+     * 备份新鲜度提示（v2.9.1）：超过 [STALE_DAYS] 天没备份就提醒。
+     * 返回 null 表示不需要提示（刚备份过）。
+     */
+    fun stalenessHint(lastBackupAtMillis: Long, now: Long = System.currentTimeMillis()): String? {
+        val days = daysSince(lastBackupAtMillis, now) ?: return "还没有做过备份，账本一旦丢失将无法找回"
+        return when {
+            days >= STALE_DAYS * 2 -> "已经 $days 天没有备份了，强烈建议现在备份一次"
+            days >= STALE_DAYS -> "上次备份是 $days 天前，建议备份一次"
+            else -> null
+        }
+    }
+
+    /** 超过这么多天没备份就提醒 */
+    const val STALE_DAYS = 30L
+
     /** 备份里的单张表 */
-    private class TableData(
-        val columns: List<String>,
+    private class TableData(        val columns: List<String>,
         val types: Map<String, String>,
         val rows: List<JSONArray>
     ) {

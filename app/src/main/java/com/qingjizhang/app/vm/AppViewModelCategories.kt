@@ -8,6 +8,7 @@ import com.qingjizhang.app.ui.theme.ThemeMode
 import com.qingjizhang.app.util.DateFmt
 import com.qingjizhang.app.util.Money
 import com.qingjizhang.app.util.ReceiptStore
+import com.qingjizhang.app.util.UserError
 import com.qingjizhang.app.vm.AppViewModel
 import com.qingjizhang.app.widget.WidgetRefresh
 import kotlinx.coroutines.Dispatchers
@@ -50,7 +51,7 @@ fun AppViewModel.addCategory(name: String, type: CategoryType, parentId: Long, i
                     )
                 )
                 _snack.emit("已添加分类：$name")
-            }.onFailure { _snack.emit("添加失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("添加失败", it)) }
         }
     }
 
@@ -60,7 +61,7 @@ fun AppViewModel.setCategoryIcon(category: Category, iconKey: String) {
             runCatching {
                 repo().updateCategory(category.copy(iconKey = iconKey))
                 _snack.emit("已更新图标")
-            }.onFailure { _snack.emit("更新失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("更新失败", it)) }
         }
     }
 
@@ -69,7 +70,7 @@ fun AppViewModel.deleteCategory(category: Category) {
             runCatching {
                 repo().deleteCategory(category)
                 _snack.emit("已删除分类：${category.name}")
-            }.onFailure { _snack.emit("删除失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 
@@ -78,7 +79,7 @@ fun AppViewModel.renameCategory(category: Category, name: String) {
             runCatching {
                 repo().updateCategory(category.copy(name = name))
                 _snack.emit("已重命名")
-            }.onFailure { _snack.emit("重命名失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("重命名失败", it)) }
         }
     }
 
@@ -101,7 +102,7 @@ fun AppViewModel.moveCategory(category: Category, up: Boolean) {
                 reordered.forEachIndexed { i, c ->
                     if (c.sortOrder != i) repo().setCategorySortOrder(c.id, i)
                 }
-            }.onFailure { _snack.emit("排序失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("排序失败", it)) }
         }
     }
 
@@ -112,7 +113,7 @@ fun AppViewModel.toggleCategoryHidden(category: Category) {
                 val hide = !category.hidden
                 repo().setCategoryHidden(category.id, hide)
                 _snack.emit(if (hide) "已隐藏：${category.name}" else "已取消隐藏：${category.name}")
-            }.onFailure { _snack.emit("操作失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("操作失败", it)) }
         }
     }
 

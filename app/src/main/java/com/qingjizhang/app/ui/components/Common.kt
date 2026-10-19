@@ -9,10 +9,35 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Category
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.ChevronLeft
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.FilterList
+import androidx.compose.material.icons.rounded.HelpOutline
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Menu
+import androidx.compose.material.icons.rounded.MenuBook
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Upload
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -38,6 +63,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -383,16 +414,70 @@ fun BackTopBar(
     }
 }
 
+/**
+ * 图标点击按钮（顶栏 / 卡片右上角那一类）。
+ *
+ * v2.9.1 无障碍：这类按钮**只有图标没有文字**，TalkBack 读屏时如果不给
+ * contentDescription，用户只会听到「按钮」，完全不知道点下去会发生什么。
+ * 所以 [contentDescription] 由调用方必填（带默认值兜底，避免漏传导致回归）。
+ */
+/**
+ * 常见图标的无障碍标签（v2.9.1）。
+ *
+ * 用图标做 Map 键：Material Icons 的 ImageVector 是单例对象，同一图标取得的是同一个实例，
+ * 因此按引用相等可以直接命中。未收录的图标返回通用标签「操作」，
+ * 保证 TalkBack 永远不会读到空标签——具体文案优先级由调用方传入的 contentDescription 决定。
+ */
+private val ICON_LABELS: Map<ImageVector, String> = buildMap {
+    put(Icons.Rounded.Search, "搜索")
+    put(Icons.Rounded.Add, "添加")
+    put(Icons.Rounded.MenuBook, "应收应付")
+    put(Icons.Rounded.Settings, "设置")
+    put(Icons.Rounded.History, "历史")
+    put(Icons.Rounded.Category, "账户类型")
+    put(Icons.Rounded.FilterList, "筛选")
+    put(Icons.Rounded.Insights, "报表")
+    put(Icons.Rounded.CalendarMonth, "日历")
+    put(Icons.Rounded.ChevronLeft, "上一页")
+    put(Icons.Rounded.ChevronRight, "下一页")
+    put(Icons.Rounded.Edit, "编辑")
+    put(Icons.Rounded.Delete, "删除")
+    put(Icons.Rounded.Close, "关闭")
+    put(Icons.Rounded.Check, "完成")
+    put(Icons.Rounded.Refresh, "刷新")
+    put(Icons.Rounded.Share, "分享")
+    put(Icons.Rounded.Download, "下载")
+    put(Icons.Rounded.Upload, "导入")
+    put(Icons.Rounded.Visibility, "显示隐藏账户")
+    put(Icons.Rounded.VisibilityOff, "隐藏账户")
+    put(Icons.Rounded.HelpOutline, "帮助")
+    put(Icons.Rounded.Info, "说明")
+    put(Icons.Rounded.NotificationsActive, "提醒")
+    put(Icons.Rounded.MoreVert, "更多")
+    put(Icons.Rounded.ArrowBack, "返回")
+}
+
+/** 图标的默认无障碍标签（未收录时返回通用文案，绝不返回空） */
+fun iconLabelOf(icon: ImageVector): String = ICON_LABELS[icon] ?: "操作"
+
 @Composable
-fun IconAction(icon: ImageVector, onClick: () -> Unit, tint: Color = Ink, size: Dp = 22.dp) {
+fun IconAction(
+    icon: ImageVector,
+    onClick: () -> Unit,
+    tint: Color = Ink,
+    size: Dp = 22.dp,
+    contentDescription: String = iconLabelOf(icon)
+) {
     Box(
         modifier = Modifier
             .size(38.dp)
             .clip(CircleShape)
-            .clickable { onClick() },
+            .clickable(onClickLabel = contentDescription) { onClick() }
+            // 图标本身已由 Icon 的 contentDescription 提供语义，外层容器不重复朗读
+            .clearAndSetSemantics { },
         contentAlignment = Alignment.Center
     ) {
-        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(size))
+        Icon(icon, contentDescription = contentDescription, tint = tint, modifier = Modifier.size(size))
     }
 }
 
@@ -466,14 +551,30 @@ fun SegSmall(
     }
 }
 
+/**
+ * 自绘开关。
+ *
+ * v2.9.1 无障碍：自绘 Box 没有内置语义，读屏用户既不知道它是开关、也不知道当前开还是关。
+ * 这里补上 Role.Switch + 选中状态，并支持无障碍点击手势（TalkBack 双击即可切换）。
+ */
 @Composable
-fun ToggleSwitch(checked: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+fun ToggleSwitch(
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null
+) {
     Box(
         modifier = modifier
             .size(width = 44.dp, height = 25.dp)
             .clip(CircleShape)
             .background(if (checked) Primary else Track)
-            .clickable { onChange(!checked) },
+            .semantics {
+                role = Role.Switch
+                stateDescription = if (checked) "已开启" else "已关闭"
+                if (contentDescription != null) this.contentDescription = contentDescription
+            }
+            .clickable(onClickLabel = if (checked) "关闭" else "开启") { onChange(!checked) },
         contentAlignment = Alignment.CenterStart
     ) {
         Box(

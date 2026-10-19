@@ -27,14 +27,14 @@ val keystorePropsFile = file("keystore.properties")
 val keystoreProps = Properties().apply {
     if (keystorePropsFile.exists()) keystorePropsFile.inputStream().use { load(it) }
 }
-val hasReleaseKeystore = releaseKeystore.exists() &&
-    (keystorePropsFile.exists() || System.getenv("KEYSTORE_PASSWORD") != null)
 val storePass: String? = keystoreProps.getProperty("storePassword")
     ?: System.getenv("KEYSTORE_PASSWORD")
 val keyPass: String? = keystoreProps.getProperty("keyPassword")
     ?: System.getenv("KEYSTORE_PASSWORD")
 val keyAliasName: String? = keystoreProps.getProperty("keyAlias")
     ?: System.getenv("KEYSTORE_ALIAS")
+val hasReleaseKeystore = releaseKeystore.exists() &&
+    storePass != null && keyPass != null && keyAliasName != null
 
 android {
     namespace = "com.qingjizhang.app"
@@ -44,13 +44,13 @@ android {
         applicationId = "com.qingjizhang.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 50
-        versionName = "2.9.0"
+        versionCode = 51
+        versionName = "2.9.1"
         vectorDrawables.useSupportLibrary = true
     }
 
     signingConfigs {
-        if (hasReleaseKeystore && storePass != null && keyPass != null && keyAliasName != null) {
+        if (hasReleaseKeystore) {
             create("release") {
                 storeFile = releaseKeystore
                 storePassword = storePass
@@ -73,8 +73,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = if (hasReleaseKeystore && storePass != null && keyPass != null && keyAliasName != null)
-                signingConfigs.getByName("release")
+            signingConfig = if (hasReleaseKeystore) signingConfigs.getByName("release")
             else signingConfigs.getByName("debug")
         }
     }

@@ -829,6 +829,24 @@ fun AddEntrySheet(
                             ) { accountId = it.id }
                         }
 
+                        // v2.9.1：支出超过该账户余额时提前提示（不阻止保存，允许透支后补）
+                        val pickedAccount = accounts.firstOrNull { it.id == accountId }
+                        val overHint = EntryChecks.balanceHint(
+                            isExpense = type == TxnType.EXPENSE,
+                            isCredit = pickedAccount?.isCreditCard == true,
+                            balanceCents = balanceOf[accountId] ?: 0L,
+                            amountCents = actualCents
+                        )
+                        if (overHint != null) {
+                            Text(
+                                overHint,
+                                fontSize = 11.sp,
+                                color = WarnFg,
+                                lineHeight = 16.sp,
+                                modifier = Modifier.padding(start = 4.dp, top = 5.dp)
+                            )
+                        }
+
                         NoteRow(note, "备注...") { openTextField(TextFieldKind.NOTE) }
 
                         AttrChipRow {
@@ -972,7 +990,15 @@ fun AddEntrySheet(
                                     }
                                 }
                             }
-                            AccountPickRow("转入账户", accounts, accountTypes, toAccountId, balanceOf) {
+                            // v2.9.1：转入账户里把「转出账户」置灰，从源头避免选成同一个账户
+                            AccountPickRow(
+                                label = "转入账户",
+                                accounts = accounts,
+                                typeList = accountTypes,
+                                selectedId = toAccountId,
+                                balanceOf = balanceOf,
+                                disabledId = accountId
+                            ) {
                                 toAccountId = it.id
                             }
                         }
@@ -1361,6 +1387,8 @@ private fun AccountPickRow(
     selectedId: Long,
     /** 账户 id -> 当前余额（分），与账户页同一份实时聚合结果 */
     balanceOf: Map<Long, Long>,
+    /** v2.9.1：选择器里不可选的账户（互转时转出账户在「转入账户」里置灰） */
+    disabledId: Long = 0L,
     onPick: (Account) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -1401,9 +1429,16 @@ private fun AccountPickRow(
         )
         Icon(Icons.Rounded.KeyboardArrowRight, null, tint = Chevron, modifier = Modifier.size(18.dp))
     }
-    AccountPickerDialog(expanded, accounts, typeList, selectedId, balanceOf, { expanded = false }) {
-        onPick(it); expanded = false
-    }
+    AccountPickerDialog(
+        show = expanded,
+        accounts = accounts,
+        typeList = typeList,
+        selectedId = selectedId,
+        balanceOf = balanceOf,
+        onDismiss = { expanded = false },
+        onPick = { onPick(it); expanded = false },
+        disabledId = disabledId
+    )
 }
 
 /**
@@ -1539,8 +1574,57 @@ private fun SwitchRow(label: String, hint: String, checked: Boolean, onToggle: (
 }
 
 /**
+ * v2.9.1 打磨项 ③：记一笔的即时校验。
+ *
+ * 原来所有校验都堆在点「保存」时给一句 toast，用户要填完才发现问题。
+ * 这里把判断抽成纯函数，面板在输入过程中就能实时给出提示；
+ * **提示是非阻断的**——例如余额不足仍然允许保存（允许透支、后补），
+ * 只是提前告知，不打断记账流程。
+ */
+object EntryChecks {
+
+    /**
+     * 互转的转入账户与转出账户是否撞同一个。
+     * 撞了在这个界面里没有任何意义（账户余额不变），所以选择器里直接置灰不可选。
+     */
+    fun isSameAccountForTransfer(fromId: Long, toId: Long): Boolean =
+        fromId != 0L && toId != 0L && fromId == toId
+
+    /**
+     * 支出金额超过账户余额时给一句提示（**不阻止保存**）。
+     *
+     * @param isCredit   信用卡账户允许为负（本月消费下月还），不做提示
+     * @param isExpense  只有支出才检查；收入 / 互转 / 借贷不检查
+     * @param balanceCents 账户当前余额（分）
+     * @param amountCents  本笔金额（分，按实计口径）
+     * @return 需要展示的提示文案；null 表示无需提示
+     */
+    fun balanceHint(
+        isExpense: Boolean,
+        isCredit: Boolean,
+        balanceCents: Long,
+        amountCents: Long
+    ): String? {
+        if (!isExpense || isCredit) return null
+        if (amountCents <= 0L) return null
+        if (balanceCents <= 0L) return null
+        if (amountCents <= balanceCents) return null
+        return "超过该账户余额（当前 ¥" + com.qingjizhang.app.util.Money.text(balanceCents) +
+            "），仍可保存——余额会变成负数"
+    }
+
+    /**
+     * 借贷时资金账户与借贷账户不能相同（同一账户自己借给自己没有意义）。
+     */
+    fun isSameAccountForLend(fundId: Long, loanId: Long): Boolean =
+        fundId != 0L && loanId != 0L && fundId == loanId
+}
+
+/**
  * 账户选择器（N12）：按账户类型分组，分组顺序与分组名都跟着当前账本的类型列表走；
  * 没有账户的类型不显示；组内按 sortOrder、其次 id 排序；类型列表之外的账户追加在末尾，保证不丢账户。
+ *
+ * v2.9.1：新增 [disabledId] —— 互转的「转入账户」选择器把转出账户置灰，从源头避免选错。
  */
 @Composable
 private fun AccountPickerDialog(
@@ -1552,7 +1636,9 @@ private fun AccountPickerDialog(
     /** 账户 id -> 当前余额（分） */
     balanceOf: Map<Long, Long>,
     onDismiss: () -> Unit,
-    onPick: (Account) -> Unit
+    onPick: (Account) -> Unit,
+    /** v2.9.1：不可选的账户（置灰 + 显示原因），0 = 全部可选 */
+    disabledId: Long = 0L
 ) {
     if (!show) return
     val collapsed = remember { mutableStateMapOf<String, Boolean>() }
@@ -1602,12 +1688,14 @@ private fun AccountPickerDialog(
                     if (open) {
                         items.forEach { a ->
                             val on = a.id == selectedId
+                            // v2.9.1：不可选的账户置灰并说明原因（如互转时不能选同一个账户）
+                            val disabled = disabledId != 0L && a.id == disabledId
                             Row(
                                 Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(if (on) PrimaryBg else Color.Transparent)
-                                    .clickable { onPick(a) }
+                                    .clickable(enabled = !disabled) { if (!disabled) onPick(a) }
                                     .padding(horizontal = 6.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -1618,18 +1706,26 @@ private fun AccountPickerDialog(
                                 Text(
                                     a.name,
                                     fontSize = 14.sp,
-                                    color = if (on) Primary else Ink,
+                                    color = when {
+                                        disabled -> Muted
+                                        on -> Primary
+                                        else -> Ink
+                                    },
                                     fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(Modifier.weight(1f))
-                                // 显示真实当前余额（与账户页一致），不再是初始余额
-                                Text(
-                                    Money.withSymbol(balanceOf[a.id] ?: 0L),
-                                    fontSize = 11.5.sp,
-                                    color = Sub
-                                )
+                                if (disabled) {
+                                    Text("转出账户，不能选", fontSize = 11.sp, color = Muted)
+                                } else {
+                                    // 显示真实当前余额（与账户页一致），不再是初始余额
+                                    Text(
+                                        Money.withSymbol(balanceOf[a.id] ?: 0L),
+                                        fontSize = 11.5.sp,
+                                        color = Sub
+                                    )
+                                }
                             }
                         }
                     }

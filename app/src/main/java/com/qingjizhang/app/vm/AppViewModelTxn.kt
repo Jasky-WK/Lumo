@@ -8,6 +8,7 @@ import com.qingjizhang.app.ui.theme.ThemeMode
 import com.qingjizhang.app.util.DateFmt
 import com.qingjizhang.app.util.Money
 import com.qingjizhang.app.util.ReceiptStore
+import com.qingjizhang.app.util.UserError
 import com.qingjizhang.app.vm.AppViewModel
 import com.qingjizhang.app.widget.WidgetRefresh
 import kotlinx.coroutines.Dispatchers
@@ -59,7 +60,7 @@ internal suspend fun AppViewModel.writeTxn(txn: Txn, isNew: Boolean, tagIds: Lis
     }.fold(
         onSuccess = { true },
         onFailure = {
-            _snack.emit("保存失败：${it.message}")
+            _snack.emit(UserError.text("保存失败", it))
             false
         }
     )
@@ -85,7 +86,7 @@ fun AppViewModel.settleLend(lend: Txn, cents: Long, dateMillis: Long = System.cu
                 val record = lendSettlementOf(lend, cents, dateMillis)
                 repo().addTxn(record)
                 _snack.emit("已记录" + lendActionOf(lend) + " ¥" + Money.text(cents))
-            }.onFailure { _snack.emit("操作失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("操作失败", it)) }
         }
     }
 
@@ -116,7 +117,7 @@ fun AppViewModel.settleLendsBatch(lends: List<Txn>) {
                     "已收回 / 还出 " + list.size + " 笔，合计 ¥" +
                         Money.text(list.sumOf { it.second })
                 )
-            }.onFailure { _snack.emit("批量收回失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("批量收回失败", it)) }
         }
     }
 
@@ -157,7 +158,7 @@ fun AppViewModel.deleteTxn(txn: Txn, keepBalance: Boolean = false) {
                 } else {
                     _snack.emit("已删除，可在回收站还原")
                 }
-            }.onFailure { _snack.emit("删除失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 
@@ -224,7 +225,7 @@ fun AppViewModel.deleteTxns(txns: List<Txn>, keepBalance: Boolean = false) {
                 } else {
                     _snack.emit("已批量删除 $n 笔，可在回收站还原")
                 }
-            }.onFailure { _snack.emit("批量删除失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("批量删除失败", it)) }
         }
     }
 
@@ -235,7 +236,7 @@ fun AppViewModel.moveTxnsToLedger(txns: List<Txn>, target: Ledger) {
             runCatching {
                 repo().moveTxnsToLedger(txns.map { it.id }, target.id)
                 _snack.emit("已批量移动 ${txns.size} 笔到「${target.name}」")
-            }.onFailure { _snack.emit("批量移动失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("批量移动失败", it)) }
         }
     }
 
@@ -246,7 +247,7 @@ fun AppViewModel.changeTxnsCategory(txns: List<Txn>, category: Category) {
             runCatching {
                 repo().setTxnsCategory(txns.map { it.id }, category.id)
                 _snack.emit("已把 ${txns.size} 笔改到分类「${category.name}」")
-            }.onFailure { _snack.emit("批量修改失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("批量修改失败", it)) }
         }
     }
 
@@ -257,7 +258,7 @@ fun AppViewModel.changeTxnsAccount(txns: List<Txn>, account: Account) {
             runCatching {
                 repo().setTxnsAccount(txns.map { it.id }, account.id)
                 _snack.emit("已把 ${txns.size} 笔改到账户「${account.name}」")
-            }.onFailure { _snack.emit("批量修改失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("批量修改失败", it)) }
         }
     }
 
@@ -270,7 +271,7 @@ fun AppViewModel.changeTxnsStats(txns: List<Txn>, excludeFromStats: Boolean? = n
                 if (excludeFromStats != null) repo().setTxnsExcludeFromStats(ids, excludeFromStats)
                 if (excludeFromBudget != null) repo().setTxnsExcludeFromBudget(ids, excludeFromBudget)
                 _snack.emit("已更新 ${txns.size} 笔的统计口径")
-            }.onFailure { _snack.emit("批量更新失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("批量更新失败", it)) }
         }
     }
 
@@ -289,7 +290,7 @@ fun AppViewModel.changeTxnsRefund(txns: List<Txn>, refundCents: Long) {
                 targets.groupBy { refundCents.coerceIn(0L, it.amountCents) }
                     .forEach { (cents, group) -> repo().setTxnsRefund(group.map { it.id }, cents) }
                 _snack.emit("已设置报销 / 退款：${targets.size} 笔")
-            }.onFailure { _snack.emit("批量设置失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("批量设置失败", it)) }
         }
     }
 

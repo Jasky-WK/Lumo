@@ -37,6 +37,7 @@ import com.qingjizhang.app.data.CsvManager
 import com.qingjizhang.app.util.DateFmt
 import com.qingjizhang.app.util.Money
 import com.qingjizhang.app.util.ReportStats
+import com.qingjizhang.app.util.UserError
 import com.qingjizhang.app.vm.AppViewModel
 import com.qingjizhang.app.vm.toast
 import kotlinx.coroutines.launch
@@ -84,7 +85,7 @@ fun MonthlyReportSheet(vm: AppViewModel, stats: ReportStats, onDismiss: () -> Un
                 val name = "Lumo-" + stats.title + ".png"
                 val path = CsvManager.saveToDownloads(context, name, pngBytes(), "image/png")
                 vm.toast("已保存到「下载」：$path")
-            }.onFailure { vm.toast("保存失败：${it.message}") }
+            }.onFailure { vm.toast(UserError.text("保存失败", it)) }
             busy = false
         }
     }
@@ -108,7 +109,7 @@ fun MonthlyReportSheet(vm: AppViewModel, stats: ReportStats, onDismiss: () -> Un
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 context.startActivity(Intent.createChooser(send, "分享本月报告"))
-            }.onFailure { vm.toast("分享失败：${it.message}") }
+            }.onFailure { vm.toast(UserError.text("分享失败", it)) }
             busy = false
         }
     }

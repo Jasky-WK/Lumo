@@ -8,6 +8,7 @@ import com.qingjizhang.app.ui.theme.ThemeMode
 import com.qingjizhang.app.util.DateFmt
 import com.qingjizhang.app.util.Money
 import com.qingjizhang.app.util.ReceiptStore
+import com.qingjizhang.app.util.UserError
 import com.qingjizhang.app.vm.AppViewModel
 import com.qingjizhang.app.widget.WidgetRefresh
 import kotlinx.coroutines.Dispatchers
@@ -159,7 +160,7 @@ fun AppViewModel.saveBudget(budget: Budget, isNew: Boolean) {
             runCatching {
                 if (isNew) repo().addBudget(budget) else repo().updateBudget(budget)
                 _snack.emit(if (isNew) "已新建预算：${budget.name}" else "已保存预算：${budget.name}")
-            }.onFailure { _snack.emit("保存失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("保存失败", it)) }
         }
     }
 
@@ -169,7 +170,7 @@ fun AppViewModel.toggleBudgetEnabled(budget: Budget) {
             runCatching {
                 repo().setBudgetEnabled(budget.id, !budget.enabled)
                 _snack.emit(if (budget.enabled) "已暂停「${budget.name}」" else "已启用「${budget.name}」")
-            }.onFailure { _snack.emit("操作失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("操作失败", it)) }
         }
     }
 
@@ -178,7 +179,7 @@ fun AppViewModel.deleteBudget(budget: Budget) {
             runCatching {
                 repo().deleteBudget(budget)
                 _snack.emit("已删除预算「${budget.name}」，历史账单与统计不受影响")
-            }.onFailure { _snack.emit("删除失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 

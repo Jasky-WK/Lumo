@@ -8,6 +8,7 @@ import com.qingjizhang.app.ui.theme.ThemeMode
 import com.qingjizhang.app.util.DateFmt
 import com.qingjizhang.app.util.Money
 import com.qingjizhang.app.util.ReceiptStore
+import com.qingjizhang.app.util.UserError
 import com.qingjizhang.app.vm.AppViewModel
 import com.qingjizhang.app.widget.WidgetRefresh
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +43,7 @@ fun AppViewModel.backupNow() {
                 val f = BackupManager.createBackup(app)
                 refreshBackups()
                 _snack.emit("备份完成：${f.name}")
-            }.onFailure { _snack.emit("备份失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("备份失败", it)) }
             _busy.value = false
         }
     }
@@ -54,7 +55,7 @@ fun AppViewModel.restoreFrom(file: File) {
                 BackupManager.restore(app, file)
                 reloadAfterRestore()
                 _snack.emit("已从备份恢复，恢复前的数据已存为快照")
-            }.onFailure { _snack.emit("恢复失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("恢复失败", it)) }
             _busy.value = false
         }
     }
@@ -66,7 +67,7 @@ fun AppViewModel.restoreFromUri(uri: Uri) {
                 BackupManager.restoreFromUri(app, uri)
                 reloadAfterRestore()
                 _snack.emit("已从文件恢复，恢复前的数据已存为快照")
-            }.onFailure { _snack.emit("恢复失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("恢复失败", it)) }
             _busy.value = false
         }
     }
@@ -77,7 +78,7 @@ fun AppViewModel.deleteBackup(file: File) {
                 BackupManager.delete(file)
                 refreshBackups()
                 _snack.emit("已删除备份文件")
-            }.onFailure { _snack.emit("删除失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("删除失败", it)) }
         }
     }
 
@@ -206,7 +207,7 @@ fun AppViewModel.exportCsv() {
                 val name = "Lumo账单-" + DateFmt.isoDate(System.currentTimeMillis()) + ".csv"
                 val path = CsvManager.saveToDownloads(app, name, content)
                 _snack.emit("已导出到 $path")
-            }.onFailure { _snack.emit("导出失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("导出失败", it)) }
             _busy.value = false
         }
     }
@@ -216,7 +217,7 @@ fun AppViewModel.downloadTemplate() {
             runCatching {
                 val path = CsvManager.saveToDownloads(app, "Lumo导入模板.csv", CsvManager.buildTemplate())
                 _snack.emit("模板已保存到 $path")
-            }.onFailure { _snack.emit("保存失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("保存失败", it)) }
         }
     }
 
@@ -249,7 +250,7 @@ fun AppViewModel.exportExcel() {
                 val name = "Lumo账单-" + DateFmt.isoDate(System.currentTimeMillis()) + ".xlsx"
                 val path = CsvManager.saveToDownloads(app, name, bytes, XlsxExporter.MIME)
                 _snack.emit("已导出到 $path")
-            }.onFailure { _snack.emit("导出失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("导出失败", it)) }
             _busy.value = false
         }
     }
@@ -280,7 +281,7 @@ fun AppViewModel.beginCsvImport(uri: Uri) {
                     excluded = emptySet(),
                     preview = CsvManager.previewRows(rows, mapping, hasHeader)
                 )
-            }.onFailure { _snack.emit("读取失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("读取失败", it)) }
             _busy.value = false
         }
     }
@@ -424,7 +425,7 @@ fun AppViewModel.confirmCsvImport() {
                     else "导入完成：成功 $ok 笔，跳过 $bad 笔"
                 )
                 _csvDraft.value = null
-            }.onFailure { _snack.emit("导入失败：${it.message}") }
+            }.onFailure { _snack.emit(UserError.text("导入失败", it)) }
             _busy.value = false
         }
     }

@@ -128,7 +128,8 @@ fun AccountsScreen(
                         Spacer(Modifier.weight(1f))
                         Icon(
                             if (showHidden) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
-                            contentDescription = null,
+                            // v2.9.1 无障碍：这个图标是唯一的「隐藏账户是否显示」指示，必须朗读出来
+                            contentDescription = if (showHidden) "隐藏账户已显示" else "隐藏账户已隐藏",
                             tint = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.size(19.dp)
                         )
